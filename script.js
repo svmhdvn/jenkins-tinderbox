@@ -102,28 +102,23 @@ function generateFormattedCell(job) {
         failingSinceNumber = (job.lastSuccessfulBuild ? job.lastSuccessfulBuild.number + 1: '1').toString();
       else if (job.lastCompletedBuild.result === 'UNSTABLE')
         failingSinceNumber = (Math.max(job.lastStableBuild ? job.lastStableBuild.number : 0, job.lastFailedBuild ? job.lastFailedBuild.number : 0) + 1).toString();
-      fail_url = '/job/' + job.name + '/' + failingSinceNumber + '/api/json?tree=description';
-      var xhr = new XMLHttpRequest();
-      xhr.open("GET", "https://ci.FreeBSD.org" + fail_url, false);
-      xhr.send();
-      if (xhr.status === 200)
-        fail_since_hash = JSON.parse(xhr.responseText).description;
-      else
-        throw new Error("Failed to fetch data from " + fail_url + ". Status: " + xhr.status);
-
-      var failingSince = document.createElement('i');
-      failingSince.appendChild(document.createTextNode(
-        '(failing since ' + (fail_since_hash === '<html>' ? 'unknown commit' : shortHash(fail_since_hash)) + ')'
-      ));
-      td.appendChild(failingSince);
-      td.appendChild(_br_.cloneNode(false));
-      var links = _span_.cloneNode(false);
-      links.setAttribute('class', 'tiny');
-      var lastSuccessful = document.createElement('a');
-      lastSuccessful.setAttribute('href', 'https://ci.FreeBSD.org' + fail_url.split('api')[0]);
-      lastSuccessful.appendChild(document.createTextNode('details'));
-      links.appendChild(lastSuccessful);
-      td.appendChild(links);
+      fail_url = '/job/' + job.name + '/' + failingSinceNumber + '/api/json?tree=description'
+      getJSON(fail_url, function(data) {
+        fail_since_hash = data.description;
+        var failingSince = document.createElement('i');
+        failingSince.appendChild(document.createTextNode(
+          '(failing since ' + (fail_since_hash === '<html>' ? 'unknown commit' : shortHash(fail_since_hash)) + ')'
+        ));
+        td.appendChild(failingSince);
+        td.appendChild(_br_.cloneNode(false));
+        var links = _span_.cloneNode(false);
+        links.setAttribute('class', 'tiny');
+        var lastSuccessful = document.createElement('a');
+        lastSuccessful.setAttribute('href', 'https://ci.FreeBSD.org' + fail_url.split('api')[0]);
+        lastSuccessful.appendChild(document.createTextNode('details'));
+        links.appendChild(lastSuccessful);
+        td.appendChild(links);
+      });
     }
   } else {
     td.appendChild(document.createTextNode('-'));
